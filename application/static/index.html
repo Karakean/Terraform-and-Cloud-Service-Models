@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Text To Speech App</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Text To Speech App</h1>
+    <form id="ttsForm">
+        <label for="text">Enter text:</label>
+        <input type="text" id="text" name="text" required>
+        <label for="lang">Choose language:</label>
+        <select id="lang">
+            <option value="pl">Polish</option>
+            <option value="en">English</option>
+            <option value="es">Spanish</option>
+            <option value="de">German</option>
+            <option value="fr">French</option>
+        </select>
+        <button type="submit">Convert to Speech</button>
+    </form>
+    <audio id="audioPlayer" controls hidden></audio>
+
+    <script>
+        $(document).ready(function() {
+            $('#ttsForm').on('submit', function(event) {
+                event.preventDefault();
+                var text = $('#text').val().trim();
+                var lang = $('#lang').val();
+
+                if (!text) {
+                    alert('Please enter some text.');
+                    return;
+                }
+
+                $.ajax({
+                    url: '/api/text-to-speech',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ text: text, lang: lang }),
+                    xhrFields: {
+                        responseType: 'blob'
+                    },
+                    success: function(response) {
+                        var audioPlayer = $('#audioPlayer')[0];
+                        var url = window.URL.createObjectURL(response);
+                        audioPlayer.src = url;
+                        audioPlayer.hidden = false;
+                        audioPlayer.play();
+                        audioPlayer.onended = function() {
+                            window.URL.revokeObjectURL(url);
+                        };
+                    },
+                    error: function(xhr) {
+                        alert('Failed to convert text to speech. Error: ' + xhr.responseText);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
