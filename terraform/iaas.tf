@@ -1,7 +1,7 @@
 # 1. IaaS
 
 resource "aws_network_interface" "demo_eni" {
-  subnet_id = aws_subnet.demo_subnet_1a.id
+  subnet_id = element([aws_subnet.demo_subnet_1a.id, aws_subnet.demo_subnet_1b.id], count.index)
   security_groups = [aws_security_group.demo_app_sg.id]
   count = 2
 
