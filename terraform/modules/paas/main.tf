@@ -1,24 +1,22 @@
-# 2. PaaS (& CaaS & serverless)
-
 resource "aws_ecs_cluster" "demo_ecs_cluster" {
-  name = "zsch-ecs-cluster"
+  name = var.cluster_name
 }
 
 resource "aws_ecs_task_definition" "demo_task" {
-  family                   = "zsch-ecs-task"
+  family                   = var.task_family
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
+  cpu                      = var.task_cpu
+  memory                   = var.task_memory
 
   container_definitions = jsonencode([
     {
-      name  = "demo-app"
-      image = "ghcr.io/karakean/text-to-speech-demo-app"
+      name  = var.container_name
+      image = var.container_image
       portMappings = [
         {
-          containerPort = 8080
-          hostPort      = 8080
+          containerPort = var.container_port
+          hostPort      = var.container_port
           protocol      = "tcp"
           appProtocol   = "http"
         }
@@ -31,23 +29,23 @@ resource "aws_ecs_service" "demo_ecs_service" {
   name            = "zsch-ecs-service"
   cluster         = aws_ecs_cluster.demo_ecs_cluster.id
   task_definition = aws_ecs_task_definition.demo_task.arn
-  desired_count   = 2
+  desired_count   = var.desired_count
   launch_type     = "FARGATE"
   network_configuration {
-    subnets         = [aws_subnet.demo_subnet_1a.id, aws_subnet.demo_subnet_1b.id]
-    security_groups = [aws_security_group.demo_app_sg.id]
+    subnets         = var.subnet_ids
+    security_groups = [var.security_group_id]
     assign_public_ip = true
   }
   load_balancer {
-    target_group_arn = aws_lb_target_group.demo_alb_app_tg.arn
-    container_name   = "demo-app"
-    container_port   = 8080
+    target_group_arn = var.target_group_arn
+    container_name   = var.container_name
+    container_port   = var.container_port
   }
 }
 
 resource "aws_appautoscaling_target" "demo_scaling_target" {
-  max_capacity       = 10
-  min_capacity       = 2
+  max_capacity       = var.max_capacity
+  min_capacity       = var.min_capacity
   resource_id        = "service/${aws_ecs_cluster.demo_ecs_cluster.name}/${aws_ecs_service.demo_ecs_service.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
@@ -64,8 +62,7 @@ resource "aws_appautoscaling_policy" "demo_scaling_out_policy" {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageMemoryUtilization"
     }
-
-    target_value = 75.0
+    target_value = var.target_value_scale_out
   }
 }
 
@@ -80,6 +77,6 @@ resource "aws_appautoscaling_policy" "demo_scaling_in_policy" {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageMemoryUtilization"
     }
-    target_value = 20.0
+    target_value = var.target_value_scale_in
   }
 }

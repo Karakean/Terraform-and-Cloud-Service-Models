@@ -1,5 +1,5 @@
 resource "aws_vpc" "demo_vpc" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block = var.vpc_cidr_block
 
   tags = {
     Name = "zsch-vpc"
@@ -30,9 +30,9 @@ resource "aws_route_table_association" "demo_route_table_association_1b" {
 }
 
 resource "aws_subnet" "demo_subnet_1a" {
-  vpc_id = aws_vpc.demo_vpc.id
-  cidr_block = "10.0.0.0/24"
-  availability_zone = "eu-central-1a"
+  vpc_id                 = aws_vpc.demo_vpc.id
+  cidr_block             = var.subnet_1a_cidr
+  availability_zone      = "eu-central-1a"
   map_public_ip_on_launch = true
 
   tags = {
@@ -41,9 +41,9 @@ resource "aws_subnet" "demo_subnet_1a" {
 }
 
 resource "aws_subnet" "demo_subnet_1b" {
-  vpc_id = aws_vpc.demo_vpc.id
-  cidr_block = "10.0.1.0/24"
-  availability_zone = "eu-central-1b"
+  vpc_id                 = aws_vpc.demo_vpc.id
+  cidr_block             = var.subnet_1b_cidr
+  availability_zone      = "eu-central-1b"
   map_public_ip_on_launch = true
 
   tags = {
